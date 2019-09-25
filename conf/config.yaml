@@ -1,0 +1,18 @@
+run_mode: debug
+addr: 8080
+name: vc-gin-api
+url: http://127.0.0.1:8080
+max_ping_count: 10
+jwt_secret_user: Rtg8BPKNEf2mB4mgvKONGPZZQSaJWNLijxR42qRgq0iBb5
+jwt_secret_admin: TrsBPKNEf2mB4mgvKKONGPZZQSaJWNLijxR42qRgq4EwqA
+
+logger:
+  writers: file,stdout
+  logger_level: INFO
+  logger_file: logs/vc-gin-api.log
+  log_format_text: false
+  rollingPolicy: size
+  log_rotate_date: 1
+  log_ratate_size: 50
+  log_backup_count: 7
+
