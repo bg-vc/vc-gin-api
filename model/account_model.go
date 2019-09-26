@@ -9,7 +9,7 @@ type Account struct {
 	IsAdmin  int    `db:"is_admin" json:"isAdmin"`
 }
 
-type AccountReq struct {
+type LoginForm struct {
 	Name     string `form:"name" binding:"required"`
 	Password string `form:"password" binding:"required"`
 }
@@ -17,4 +17,10 @@ type AccountReq struct {
 type AccountResp struct {
 	Name  string `json:"name"`
 	Token string `json:"token"`
+}
+
+type UpdatePwdForm struct {
+	Name   string `form:"name" binding:"required"`
+	OldPwd string `form:"oldPwd" binding:"required"`
+	NewPwd string `form:"newPwd" binding:"required"`
 }

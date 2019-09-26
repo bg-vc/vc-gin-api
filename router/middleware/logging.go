@@ -25,7 +25,11 @@ func (w bodyLogWriter) Write(b []byte) (int, error) {
 func Logging() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now().UTC()
+
 		path := c.Request.URL.Path
+		if path == "/api/check/health" || path == "/api/check/ram" || path == "/api/check/cpu" || path == "/api/check/disk" {
+			return
+		}
 
 		var bodyBytes []byte
 		if c.Request.Body != nil {

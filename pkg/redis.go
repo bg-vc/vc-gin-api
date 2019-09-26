@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/spf13/viper"
 	"gopkg.in/redis.v5"
 	"time"
@@ -26,7 +27,7 @@ func LoadRedisConfig(viper *viper.Viper) *RedisConfig {
 		DB:       viper.GetInt("index"),
 		PoolSize: viper.GetInt("pool_size"),
 	}
-	log.Infof("LoadRedisConfig:%+v", cfg)
+	fmt.Printf("LoadRedisConfig:%+v\n", cfg)
 	return cfg
 }
 

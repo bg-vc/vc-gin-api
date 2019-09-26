@@ -17,8 +17,8 @@ func NewAccountService(accountDao *dao.AccountDao) *AccountService {
 	return &AccountService{accountDao}
 }
 
-func (service *AccountService) LoginAccount(req *model.AccountReq) (*model.AccountResp, error) {
-	account, err := service.accountDao.GetAccountByName(req.Name)
+func (service *AccountService) LoginAccount(form *model.LoginForm) (*model.AccountResp, *errno.Errno) {
+	account, err := service.accountDao.GetAccountByName(form.Name)
 	if err != nil {
 		return nil, errno.InternalServerError
 	}
@@ -26,7 +26,7 @@ func (service *AccountService) LoginAccount(req *model.AccountReq) (*model.Accou
 		return nil, errno.ErrAccount
 	}
 	salt := account.Salt
-	pwdCrypt := util.MD5(salt + req.Password)
+	pwdCrypt := util.MD5(salt + form.Password)
 	if pwdCrypt != account.PwdCrypt {
 		return nil, errno.ErrAccount
 	}
@@ -45,6 +45,27 @@ func (service *AccountService) LoginAccount(req *model.AccountReq) (*model.Accou
 	}
 
 	return resp, nil
+}
+
+func (service *AccountService) UpdateAccountPwd(form *model.UpdatePwdForm) *errno.Errno {
+	account, err := service.accountDao.GetAccountByName(form.Name)
+	if err != nil {
+		return errno.InternalServerError
+	}
+	if account.Name == "" {
+		return errno.ErrAccount
+	}
+	oldSalt := account.Salt
+	oldPwdCrypt := util.MD5(oldSalt + form.OldPwd)
+	if account.PwdCrypt != oldPwdCrypt {
+		return errno.ErrAccount
+	}
+	newSalt := util.GetRandomString(8)
+	newPwdCrypt := util.MD5(newSalt + form.NewPwd)
+	if err := service.accountDao.UpdateAccountPwd(form.Name, newSalt, newPwdCrypt); err != nil {
+		return errno.InternalServerError
+	}
+	return nil
 }
 
 func signApiToken(id uint64, username string, accountType int) (string, error) {

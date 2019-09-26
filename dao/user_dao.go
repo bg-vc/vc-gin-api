@@ -82,4 +82,5 @@ func (dao *UserDao) UpdateUser(form *model.UserForm) error {
 	if _, err := dao.dbWrite.Exec(sql, form.Name, form.Age, form.Address); err != nil {
 		log.Errorf(err, "UpdateUser error:%v", sql)
 	}
+	return nil
 }

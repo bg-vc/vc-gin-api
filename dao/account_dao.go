@@ -8,11 +8,12 @@ import (
 )
 
 type AccountDao struct {
-	dbRead *sqlx.DB
+	dbRead  *sqlx.DB
+	dbWrite *sqlx.DB
 }
 
-func NewAccountDao(dbRead *sqlx.DB) *AccountDao {
-	return &AccountDao{dbRead}
+func NewAccountDao(dbRead, dbWrite *sqlx.DB) *AccountDao {
+	return &AccountDao{dbRead, dbWrite}
 }
 
 func (dao *AccountDao) GetAccountByName(name string) (*model.Account, error) {
@@ -33,4 +34,13 @@ func (dao *AccountDao) GetAccountByName(name string) (*model.Account, error) {
 	}
 
 	return item, nil
+}
+
+func (dao *AccountDao) UpdateAccountPwd(name, salt, pwdCrypt string) error {
+	sql := fmt.Sprintf(`update account set salt=?, pwd_crypt=? where name=? `)
+	if _, err := dao.dbWrite.Exec(sql, salt, pwdCrypt, name); err != nil {
+		log.Errorf(err, "UpdateAccountPwd error")
+		return err
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 	"vc-gin-api/pkg/log"
@@ -31,7 +32,7 @@ func LoadDBReadConfig(viper *viper.Viper) *DBReadConfig {
 		Username: viper.GetString("username"),
 		Password: viper.GetString("password"),
 	}
-	log.Infof("LoadDBReadConfig:%+v", cfg)
+	fmt.Printf("LoadDBReadConfig:%+v\n", cfg)
 	return cfg
 }
 
@@ -43,7 +44,7 @@ func LoadDBWriteConfig(viper *viper.Viper) *DBWriteConfig {
 		Username: viper.GetString("username"),
 		Password: viper.GetString("password"),
 	}
-	log.Infof("LoadDBWriteConfig:%+v", cfg)
+	fmt.Printf("LoadDBWriteConfig:%+v\n", cfg)
 	return cfg
 }
 

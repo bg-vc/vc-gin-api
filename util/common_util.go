@@ -6,7 +6,9 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"encoding/hex"
+	"math/rand"
 	"regexp"
+	"time"
 	"unicode"
 )
 
@@ -63,4 +65,27 @@ func IsHan(str string) bool {
 		}
 	}
 	return false
+}
+
+func GetRandomString(n int) string {
+	const symbols = "0123456789abcdefghjkmnopqrstuvwxyzABCDEFGHJKMNOPQRSTUVWXYZ"
+	const symbolsIdxBits = 6
+	const symbolsIdxMask = 1<<symbolsIdxBits - 1
+	const symbolsIdxMax = 63 / symbolsIdxBits
+
+	prng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	b := make([]byte, n)
+	for i, cache, remain := n-1, prng.Int63(), symbolsIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = prng.Int63(), symbolsIdxMax
+		}
+		if idx := int(cache & symbolsIdxMask); idx < len(symbols) {
+			b[i] = symbols[idx]
+			i--
+		}
+		cache >>= symbolsIdxBits
+		remain--
+	}
+	return string(b)
 }
