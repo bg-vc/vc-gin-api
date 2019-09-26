@@ -13,6 +13,25 @@ logger:
   log_format_text: false
   rollingPolicy: size
   log_rotate_date: 1
-  log_ratate_size: 50
+  log_rotate_size: 50
   log_backup_count: 7
 
+db_read:
+  schema: demo
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: 123456
+
+db_write:
+  schema: demo
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: 123456
+
+redis:
+  host: 127.0.0.1:6379
+  index: 0
+  pool_size: 10
+  password: 123456
