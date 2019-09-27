@@ -7,13 +7,13 @@ go build
 
 ## 1. Account Login
 
-**Url** : http://127.0.0.1:8080/api/account/login
+**Url** : `http://127.0.0.1:8080/api/account/login`
 
-**Method** : POST
+**Method** : `POST`
 
-**Params** : name, password
+**Params** : `name`, `password`
 
-**Auth Required** : No
+**Auth Required** : `No`
 
 **Request** :
 
@@ -36,13 +36,13 @@ http://127.0.0.1:8080/api/account/login -d'{"name":"James", "password":"admin123
 
 ## 2. Account Password Update
 
-**Url** : http://127.0.0.1:8080/api/account/updatePass
+**Url** : `http://127.0.0.1:8080/api/account/updatePass`
 
-**method** : POST
+**method** : `POST`
 
-**Params** : name, oldPwd, newPwd
+**Params** : `name`, `oldPwd`, `newPwd`
 
-**Auth Required** : No
+**Auth Required** : `No`
 
 **request** :
 
@@ -62,13 +62,13 @@ http://127.0.0.1:8080/api/account/updatePass -d'{"name":"admin", "oldPwd":"admin
 
 ## 3. Query Users
 
-**Url** : http://127.0.0.1:8080/api/user/common/queryAll
+**Url** : `http://127.0.0.1:8080/api/user/common/queryAll`
 
-**Method** : GET
+**Method** : `GET`
 
-**Params** : start, limit, name, address
+**Params** : `start`, `limit`, `name`, `address`
 
-**Auth Required** : No
+**Auth Required** : `No`
 
 **Request** :
 
@@ -104,13 +104,13 @@ curl http://127.0.0.1:8080/api/user/common/queryAll
 
 ## 4. Add User
 
-**Url** : http://127.0.0.1:8080/api/user/common/queryAll
+**Url** : `http://127.0.0.1:8080/api/user/common/queryAll`
 
-**Method** : POST
+**Method** : `POST`
 
-**Params** : name, age, address
+**Params** : `name`, `age`, `address`
 
-**Auth Required** : Yes
+**Auth Required** : `Yes`
 
 **Request** :
 
@@ -131,13 +131,13 @@ http://127.0.0.1:8080/api/user/auth/add -d'{"name":"david", "age":28, "address":
 
 ## 4. Update User
 
-**Url** : http://127.0.0.1:8080/api/user/common/queryAll
+**Url** : `http://127.0.0.1:8080/api/user/common/queryAll`
 
-**Method** : POST
+**Method** : `POST`
 
-**Params** : name, age, address
+**Params** : `name`, `age`, `address`
 
-**Auth Required** : Yes
+**Auth Required** : `Yes`
 
 **Request** :
 
