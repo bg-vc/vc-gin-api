@@ -47,5 +47,13 @@ func UpdateAccountPwd(c *gin.Context) {
 		return
 	}
 
+	dao := dao.NewAccountDao(pkg.DBRead, pkg.DBWrite)
+	service := service.NewAccountService(dao)
+
+	if err := service.UpdateAccountPwd(model); err != nil {
+		SendResponse(c, err, nil)
+		return
+	}
+
 	SendResponse(c, nil, nil)
 }

@@ -61,5 +61,13 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
+	dao := dao.NewUserDao(pkg.DBRead, pkg.DBWrite)
+	service := service.NewUserService(dao)
+
+	if err := service.UpdateUser(form); err != nil {
+		SendResponse(c, err, nil)
+		return
+	}
+
 	SendResponse(c, nil, nil)
 }

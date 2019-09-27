@@ -31,7 +31,7 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 		check.GET("/ram", handler.RAMCheck)
 	}
 
-	account := g.Group("/api/operate/account")
+	account := g.Group("/api/account")
 	{
 		account.POST("/login", handler.LoginAccount)
 		account.POST("/updatePass", handler.UpdateAccountPwd)

@@ -25,7 +25,7 @@ func (dao *UserDao) GetUsers(req *model.UserReq) ([]*model.User, int64, error) {
 		filterSql += fmt.Sprintf(`and name='%v' `, req.Name)
 	}
 	if req.Address != "" {
-		filterSql += fmt.Sprintf(`and address like '%v%v%v' `, "%", req.Address, "%v")
+		filterSql += fmt.Sprintf(`and address like '%v%v%v' `, "%", req.Address, "%")
 	}
 
 	sortSql := fmt.Sprintf(`order by id asc `)
@@ -77,9 +77,10 @@ func (dao *UserDao) AddUser(form *model.UserForm) error {
 
 func (dao *UserDao) UpdateUser(form *model.UserForm) error {
 	sql := fmt.Sprintf(`update user set name=?, age=?, address=? `)
+	sql += fmt.Sprintf(`where name=? `)
 
 	log.Infof("UpdateUser sql:%v", sql)
-	if _, err := dao.dbWrite.Exec(sql, form.Name, form.Age, form.Address); err != nil {
+	if _, err := dao.dbWrite.Exec(sql, form.Name, form.Age, form.Address, form.Name); err != nil {
 		log.Errorf(err, "UpdateUser error:%v", sql)
 	}
 	return nil

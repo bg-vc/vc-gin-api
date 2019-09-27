@@ -18,13 +18,13 @@ func NewAccountDao(dbRead, dbWrite *sqlx.DB) *AccountDao {
 
 func (dao *AccountDao) GetAccountByName(name string) (*model.Account, error) {
 	sql := fmt.Sprintf(`select id, name, salt, pwd_crypt, status, is_admin `)
-	sql += fmt.Sprintf(`form account `)
+	sql += fmt.Sprintf(`from account `)
 	sql += fmt.Sprintf(`where name=? `)
 	log.Infof("GetAccountByName sql:%v", sql)
 
 	rows, err := dao.dbRead.Queryx(sql, name)
 	if err != nil {
-		log.Errorf(err, "GetAccountByName error")
+		log.Errorf(err, "GetAccountByName error:%v", sql)
 		return nil, err
 	}
 	defer rows.Close()
