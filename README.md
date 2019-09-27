@@ -2,9 +2,8 @@
 ```shell script
 cd $GOPATH/src/vc-gin-api
 go build
-
+./admin.sh start
 ```
-
 
 ## 1. Account Login
 
@@ -107,7 +106,7 @@ curl http://127.0.0.1:8080/api/user/common/queryAll
 
 **Url** : http://127.0.0.1:8080/api/user/common/queryAll
 
-**Method** : GET
+**Method** : POST
 
 **Params** : name, age, address
 
@@ -134,7 +133,7 @@ http://127.0.0.1:8080/api/user/auth/add -d'{"name":"david", "age":28, "address":
 
 **Url** : http://127.0.0.1:8080/api/user/common/queryAll
 
-**Method** : GET
+**Method** : POST
 
 **Params** : name, age, address
 
