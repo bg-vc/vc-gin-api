@@ -1,4 +1,4 @@
-## Server
+## Server Run
 ```shell script
 cd $GOPATH/src/vc-gin-api
 go build
