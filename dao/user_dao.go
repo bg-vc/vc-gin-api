@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"vc-gin-api/model"
+	"vc-gin-api/pkg"
 	"vc-gin-api/pkg/log"
 )
 
 type UserDao struct {
-	dbRead  *sqlx.DB
-	dbWrite *sqlx.DB
+	db *sqlx.DB
 }
 
-func NewUserDao(dbRead, dbWrite *sqlx.DB) *UserDao {
-	return &UserDao{dbRead, dbWrite}
+func NewUserDao() *UserDao {
+	return &UserDao{pkg.DB}
 }
 
 func (dao *UserDao) GetUsers(req *model.UserReq) ([]*model.User, int64, error) {
@@ -35,7 +35,7 @@ func (dao *UserDao) GetUsers(req *model.UserReq) ([]*model.User, int64, error) {
 	querySql += filterSql + sortSql + limitSql
 
 	log.Infof("GetUsers totalSql:%v", totalSql)
-	row1, err := dao.dbRead.Queryx(totalSql)
+	row1, err := dao.db.Queryx(totalSql)
 	if err != nil {
 		log.Errorf(err, "GetUsers error:%v", totalSql)
 		return nil, 0, err
@@ -47,7 +47,7 @@ func (dao *UserDao) GetUsers(req *model.UserReq) ([]*model.User, int64, error) {
 	}
 
 	log.Infof("GetUsers querySql:%v", querySql)
-	row2, err := dao.dbRead.Queryx(querySql)
+	row2, err := dao.db.Queryx(querySql)
 	if err != nil {
 		log.Errorf(err, "GetUsers error:%v", querySql)
 		return nil, 0, err
@@ -68,7 +68,7 @@ func (dao *UserDao) AddUser(form *model.UserForm) error {
 	sql += fmt.Sprintf(`values(?, ?, ?) `)
 
 	log.Infof("AddUser sql:%v", sql)
-	if _, err := dao.dbWrite.Exec(sql, form.Name, form.Age, form.Address); err != nil {
+	if _, err := dao.db.Exec(sql, form.Name, form.Age, form.Address); err != nil {
 		log.Errorf(err, "AddUser error:%v", sql)
 		return err
 	}
@@ -80,7 +80,7 @@ func (dao *UserDao) UpdateUser(form *model.UserForm) error {
 	sql += fmt.Sprintf(`where name=? `)
 
 	log.Infof("UpdateUser sql:%v", sql)
-	if _, err := dao.dbWrite.Exec(sql, form.Name, form.Age, form.Address, form.Name); err != nil {
+	if _, err := dao.db.Exec(sql, form.Name, form.Age, form.Address, form.Name); err != nil {
 		log.Errorf(err, "UpdateUser error:%v", sql)
 	}
 	return nil

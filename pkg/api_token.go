@@ -18,18 +18,13 @@ type Context struct {
 	Username string
 }
 
-func ParseRequest(c *gin.Context, accountType int) (*Context, error) {
+func ParseRequest(c *gin.Context) (*Context, error) {
 	header := c.Request.Header.Get("Authorization")
 	if len(header) == 0 {
 		return &Context{}, ErrMissingHeader
 	}
 
-	secret := ""
-	if accountType == 1 {
-		secret = viper.GetString("jwt_secret_admin")
-	} else {
-		secret = viper.GetString("jwt_secret_user")
-	}
+	secret := viper.GetString("jwt_secret")
 
 	var t string
 	fmt.Sscanf(header, "Bearer %s", &t)
@@ -51,13 +46,8 @@ func Parse(tokenString string, secret string) (*Context, error) {
 	}
 }
 
-func Sign(c Context, accountType int) (tokenString string, err error) {
-	secret := ""
-	if accountType == 1 {
-		secret = viper.GetString("jwt_secret_admin")
-	} else {
-		secret = viper.GetString("jwt_secret_user")
-	}
+func Sign(c Context) (tokenString string, err error) {
+	secret := viper.GetString("jwt_secret")
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":       c.ID,

@@ -10,8 +10,8 @@ type UserService struct {
 	userDao *dao.UserDao
 }
 
-func NewUserService(userDao *dao.UserDao) *UserService {
-	return &UserService{userDao}
+func NewUserService() *UserService {
+	return &UserService{dao.NewUserDao()}
 }
 
 func (service *UserService) QueryUsers(req *model.UserReq) (*model.UserResp, *errno.Errno) {

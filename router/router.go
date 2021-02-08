@@ -7,11 +7,6 @@ import (
 	"vc-gin-api/router/middleware"
 )
 
-const (
-	IsAdmin = 1
-	IsUser  = 2
-)
-
 func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 	g.Use(gin.Recovery())
 	g.Use(middleware.NoCache)
@@ -43,7 +38,7 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 	}
 
 	userAuth := g.Group("/api/user/auth")
-	userAuth.Use(middleware.AuthMiddleware(IsUser))
+	userAuth.Use(middleware.AuthMiddleware())
 	{
 		userAuth.POST("/add", handler.AddUser)
 		userAuth.POST("/update", handler.UpdateUser)

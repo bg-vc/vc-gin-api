@@ -2,9 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	"vc-gin-api/dao"
 	"vc-gin-api/model"
-	"vc-gin-api/pkg"
 	"vc-gin-api/pkg/errno"
 	"vc-gin-api/pkg/log"
 	"vc-gin-api/service"
@@ -24,8 +22,7 @@ func QueryUsers(c *gin.Context) {
 		req.Limit = 50
 	}
 
-	dao := dao.NewUserDao(pkg.DBRead, pkg.DBWrite)
-	service := service.NewUserService(dao)
+	service := service.NewUserService()
 
 	resp, err := service.QueryUsers(req)
 	if err != nil {
@@ -43,8 +40,7 @@ func AddUser(c *gin.Context) {
 		return
 	}
 
-	dao := dao.NewUserDao(pkg.DBRead, pkg.DBWrite)
-	service := service.NewUserService(dao)
+	service := service.NewUserService()
 
 	if err := service.AddUser(form); err != nil {
 		SendResponse(c, err, nil)
@@ -61,8 +57,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	dao := dao.NewUserDao(pkg.DBRead, pkg.DBWrite)
-	service := service.NewUserService(dao)
+	service := service.NewUserService()
 
 	if err := service.UpdateUser(form); err != nil {
 		SendResponse(c, err, nil)

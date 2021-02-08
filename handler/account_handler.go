@@ -2,9 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	"vc-gin-api/dao"
 	"vc-gin-api/model"
-	"vc-gin-api/pkg"
 	"vc-gin-api/pkg/errno"
 	"vc-gin-api/pkg/log"
 	"vc-gin-api/service"
@@ -19,8 +17,7 @@ func LoginAccount(c *gin.Context) {
 		return
 	}
 
-	dao := dao.NewAccountDao(pkg.DBRead, pkg.DBWrite)
-	service := service.NewAccountService(dao)
+	service := service.NewAccountService()
 
 	resp, err := service.LoginAccount(form)
 	if err != nil {
@@ -47,8 +44,7 @@ func UpdateAccountPwd(c *gin.Context) {
 		return
 	}
 
-	dao := dao.NewAccountDao(pkg.DBRead, pkg.DBWrite)
-	service := service.NewAccountService(dao)
+	service := service.NewAccountService()
 
 	if err := service.UpdateAccountPwd(model); err != nil {
 		SendResponse(c, err, nil)

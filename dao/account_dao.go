@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"vc-gin-api/model"
+	"vc-gin-api/pkg"
 	"vc-gin-api/pkg/log"
 )
 
 type AccountDao struct {
-	dbRead  *sqlx.DB
-	dbWrite *sqlx.DB
+	db *sqlx.DB
 }
 
-func NewAccountDao(dbRead, dbWrite *sqlx.DB) *AccountDao {
-	return &AccountDao{dbRead, dbWrite}
+func NewAccountDao() *AccountDao {
+	return &AccountDao{pkg.DB}
 }
 
 func (dao *AccountDao) GetAccountByName(name string) (*model.Account, error) {
@@ -22,7 +22,7 @@ func (dao *AccountDao) GetAccountByName(name string) (*model.Account, error) {
 	sql += fmt.Sprintf(`where name=? `)
 	log.Infof("GetAccountByName sql:%v", sql)
 
-	rows, err := dao.dbRead.Queryx(sql, name)
+	rows, err := dao.db.Queryx(sql, name)
 	if err != nil {
 		log.Errorf(err, "GetAccountByName error:%v", sql)
 		return nil, err
@@ -38,7 +38,7 @@ func (dao *AccountDao) GetAccountByName(name string) (*model.Account, error) {
 
 func (dao *AccountDao) UpdateAccountPwd(name, salt, pwdCrypt string) error {
 	sql := fmt.Sprintf(`update account set salt=?, pwd_crypt=? where name=? `)
-	if _, err := dao.dbWrite.Exec(sql, salt, pwdCrypt, name); err != nil {
+	if _, err := dao.db.Exec(sql, salt, pwdCrypt, name); err != nil {
 		log.Errorf(err, "UpdateAccountPwd error")
 		return err
 	}

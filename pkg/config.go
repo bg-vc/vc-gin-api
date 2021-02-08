@@ -10,16 +10,14 @@ import (
 
 var (
 	Cfg      *Config
-	DBRead   *sqlx.DB
-	DBWrite  *sqlx.DB
+	DB       *sqlx.DB
 	RedisCli *redis.Client
 )
 
 type Config struct {
-	Logger  *LoggerConfig
-	DBRead  *DBReadConfig
-	DBWrite *DBWriteConfig
-	Redis   *RedisConfig
+	Logger *LoggerConfig
+	DB     *DBConfig
+	Redis  *RedisConfig
 }
 
 func Init(cfgName string) {
@@ -44,10 +42,9 @@ func setConfig(cfgName string) {
 
 func loadConfig() *Config {
 	cfg := &Config{
-		Logger:  LoadLoggerConfig(viper.Sub("logger")),
-		DBRead:  LoadDBReadConfig(viper.Sub("db_read")),
-		DBWrite: LoadDBWriteConfig(viper.Sub("db_write")),
-		Redis:   LoadRedisConfig(viper.Sub("redis")),
+		Logger: LoadLoggerConfig(viper.Sub("logger")),
+		DB:     LoadDbConfig(viper.Sub("db")),
+		Redis:  LoadRedisConfig(viper.Sub("redis")),
 	}
 
 	return cfg
@@ -55,9 +52,8 @@ func loadConfig() *Config {
 
 func initConfig(cfg *Config) {
 	cfg.Logger.InitLogger()
-	DBRead = cfg.DBRead.InitDBRead()
-	DBWrite = cfg.DBWrite.InitDBWrite()
-	RedisCli = cfg.Redis.InitRedis()
+	DB = cfg.DB.InitDB()
+	//RedisCli = cfg.Redis.InitRedis()
 }
 
 func watchConfig() {

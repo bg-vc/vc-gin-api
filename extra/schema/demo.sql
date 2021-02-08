@@ -1,6 +1,8 @@
 
 CREATE DATABASE `demo` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+USE `demo`;
+
 DROP TABLE IF EXISTS `account`;
 CREATE TABLE `account` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,

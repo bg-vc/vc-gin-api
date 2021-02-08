@@ -8,9 +8,9 @@ import (
 	"vc-gin-api/pkg/log"
 )
 
-func AuthMiddleware(accountType int) gin.HandlerFunc {
+func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if _, err := pkg.ParseRequest(c, accountType); err != nil {
+		if _, err := pkg.ParseRequest(c); err != nil {
 			log.Errorf(err, "pkg.ParseRequest error")
 			handler.SendResponse(c, errno.ErrTokenInvalid, nil)
 			c.Abort()

@@ -3,8 +3,7 @@ addr: :8080
 name: vc-gin-api
 url: http://127.0.0.1:8080
 max_ping_count: 10
-jwt_secret_user: Rtg8BPKNEf2mB4mgvKONGPZZQSaJWNLijxR42qRgq0iBb5
-jwt_secret_admin: TrsBPKNEf2mB4mgvKKONGPZZQSaJWNLijxR42qRgq4EwqA
+jwt_secret: Rtg8BPKNEf2mB4mgvKONGPZZQSaJWNLijxR42qRgq0iBb5
 
 logger:
   writers: file,stdout
@@ -16,19 +15,12 @@ logger:
   log_rotate_size: 50
   log_backup_count: 7
 
-db_read:
+db:
   schema: demo
   host: 127.0.0.1
   port: 3306
   username: root
-  password: 123456
-
-db_write:
-  schema: demo
-  host: 127.0.0.1
-  port: 3306
-  username: root
-  password: 123456
+  password: root123456
 
 redis:
   host: 127.0.0.1:6379

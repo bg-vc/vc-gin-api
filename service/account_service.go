@@ -13,8 +13,8 @@ type AccountService struct {
 	accountDao *dao.AccountDao
 }
 
-func NewAccountService(accountDao *dao.AccountDao) *AccountService {
-	return &AccountService{accountDao}
+func NewAccountService() *AccountService {
+	return &AccountService{dao.NewAccountDao()}
 }
 
 func (service *AccountService) LoginAccount(form *model.LoginForm) (*model.AccountResp, *errno.Errno) {
@@ -69,7 +69,7 @@ func (service *AccountService) UpdateAccountPwd(form *model.UpdatePwdForm) *errn
 }
 
 func signApiToken(id uint64, username string, accountType int) (string, error) {
-	token, err := pkg.Sign(pkg.Context{ID: id, Username: username}, accountType)
+	token, err := pkg.Sign(pkg.Context{ID: id, Username: username})
 	if err != nil {
 		log.Errorf(err, "signApiToken error")
 		return "", nil
