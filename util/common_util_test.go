@@ -8,6 +8,6 @@ func TestGetRandomString(t *testing.T) {
 }
 
 func TestMD5(t *testing.T) {
-	result := MD5("Yq1QCXOx" + "admin")
+	result := MD5("Yq1QCXOx" + "admin123456")
 	t.Logf("result:%v", result)
 }

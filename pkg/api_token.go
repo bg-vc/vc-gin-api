@@ -52,7 +52,7 @@ func Sign(c Context) (tokenString string, err error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":       c.ID,
 		"username": c.Username,
-		"exp":      time.Now().Unix() + 60*10,
+		"exp":      time.Now().Unix() + 60*30,
 		"nbf":      time.Now().Unix(),
 		"iat":      time.Now().Unix(),
 	})

@@ -19,7 +19,7 @@ go build
 
 ```shell script
 curl -X POST -H "Content-Type:application/json" \
-http://127.0.0.1:8080/api/account/login -d'{"name":"James", "password":"admin123456"}'
+http://127.0.0.1:8080/api/account/login -d'{"name":"admin", "password":"admin123456"}'
 ```
 **Response** :
 
@@ -28,8 +28,8 @@ http://127.0.0.1:8080/api/account/login -d'{"name":"James", "password":"admin123
     "code":0,
     "msg":"ok",
     "data":{
-        "name":"James",
-        "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1Njk1NTU1NzksImlhdCI6MTU2OTU1NTI3OSwiaWQiOjEsIm5iZiI6MTU2OTU1NTI3OSwidXNlcm5hbWUiOiJKYW1lcyJ9.fsfgR494cmJiO7Jq0uRJqOdVGz9icZ5JnkHtWcbTiFs"
+        "name":"admin",
+        "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MTI3NTA4ODIsImlhdCI6MTYxMjc0OTA4MiwiaWQiOjEsIm5iZiI6MTYxMjc0OTA4MiwidXNlcm5hbWUiOiJhZG1pbiJ9.MmmQMd9V596vCbZaXx758bNSKHJdD5_tsD-K-RU3RP8"
     }
 }
 ```
@@ -48,15 +48,14 @@ http://127.0.0.1:8080/api/account/login -d'{"name":"James", "password":"admin123
 
 ```shell script
 curl -X POST -H "Content-Type:application/json" \
-http://127.0.0.1:8080/api/account/updatePass -d'{"name":"admin", "oldPwd":"admin", "newPwd":"admin123456"}'
+http://127.0.0.1:8080/api/account/updatePass -d'{"name":"admin", "oldPwd":"admin123456", "newPwd":"admin666666"}'
 ```
 **response** :
 
 ```
 {
     "code":0,
-    "msg":"ok",
-    "data":null
+    "msg":"ok"
 }
 ```
 
@@ -104,7 +103,7 @@ curl http://127.0.0.1:8080/api/user/common/queryAll
 
 ## 4. Add User
 
-**Url** : `http://127.0.0.1:8080/api/user/common/queryAll`
+**Url** : `http://127.0.0.1:8080/api/user/auth/add`
 
 **Method** : `POST`
 
@@ -151,7 +150,6 @@ http://127.0.0.1:8080/api/user/auth/update -d'{"name":"david", "age":30, "addres
 ```
 {
     "code":0,
-    "msg":"ok",
-    "data":null
+    "msg":"ok"
 }
 ```

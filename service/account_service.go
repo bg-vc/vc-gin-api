@@ -31,11 +31,7 @@ func (service *AccountService) LoginAccount(form *model.LoginForm) (*model.Accou
 		return nil, errno.ErrAccount
 	}
 
-	accountType := 2
-	if account.IsAdmin == 1 {
-		accountType = 1
-	}
-	token, err := signApiToken(account.ID, account.Name, accountType)
+	token, err := signApiToken(account.ID, account.Name)
 	if err != nil {
 		return nil, errno.InternalServerError
 	}
@@ -68,7 +64,7 @@ func (service *AccountService) UpdateAccountPwd(form *model.UpdatePwdForm) *errn
 	return nil
 }
 
-func signApiToken(id uint64, username string, accountType int) (string, error) {
+func signApiToken(id uint64, username string) (string, error) {
 	token, err := pkg.Sign(pkg.Context{ID: id, Username: username})
 	if err != nil {
 		log.Errorf(err, "signApiToken error")
