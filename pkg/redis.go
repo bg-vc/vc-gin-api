@@ -1,97 +1,57 @@
 package pkg
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
-	"gopkg.in/redis.v5"
 	"time"
-	"vc-gin-api/pkg/log"
-)
 
-var (
-	MaxErrCnt = 5
+	"github.com/redis/go-redis/v9"
 )
 
 type RedisConfig struct {
-	Addr     string
+	Enabled  bool
+	Address  string
 	Password string
 	DB       int
-	PoolSize int
 }
 
-func LoadRedisConfig(viper *viper.Viper) *RedisConfig {
-	cfg := &RedisConfig{
-		Addr:     viper.GetString("host"),
-		Password: viper.GetString("password"),
-		DB:       viper.GetInt("index"),
-		PoolSize: viper.GetInt("pool_size"),
+func OpenRedis(ctx context.Context, cfg RedisConfig) (*redis.Client, error) {
+	if !cfg.Enabled {
+		return nil, nil
 	}
-	fmt.Printf("LoadRedisConfig:%+v\n", cfg)
-	return cfg
-}
 
-func (cfg *RedisConfig) InitRedis() *redis.Client {
-	redisCli := redis.NewClient(&redis.Options{
-		Addr:     cfg.Addr,
+	client := redis.NewClient(&redis.Options{
+		Addr:     cfg.Address,
 		Password: cfg.Password,
 		DB:       cfg.DB,
-		PoolSize: cfg.PoolSize,
 	})
-	if redisCli == nil {
-		panic("redis.NewClient error")
+	pingCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	if err := client.Ping(pingCtx).Err(); err != nil {
+		client.Close()
+		return nil, fmt.Errorf("connect to optional Redis at %s: %w", cfg.Address, err)
 	}
-	_, err := redisCli.Ping().Result()
-	if err != nil {
-		panic("redisCli.Ping error")
-	}
-	return redisCli
+	return client, nil
 }
 
-func SetRedisVal(key string, val interface{}, expiration time.Duration) error {
-	buf, err := json.Marshal(val)
+// SetCache and GetCache are a deliberately small, optional Redis example.
+// The account and user APIs do not depend on them.
+func SetCache(ctx context.Context, client *redis.Client, key string, value any, ttl time.Duration) error {
+	data, err := json.Marshal(value)
 	if err != nil {
-		log.Errorf(err, "json.Marshal error")
 		return err
 	}
-	cmd := RedisCli.Set(key, string(buf), expiration)
-	if cmd.Err() != nil {
-		log.Errorf(cmd.Err(), "RedisCli.Set error")
-		return cmd.Err()
-	}
-	return nil
+	return client.Set(ctx, key, data, ttl).Err()
 }
 
-func GetRedisVal(key string) string {
-	tryCnt := 0
-	for {
-		value, err := RedisCli.Get(key).Result()
-		if err == redis.Nil {
-			return ""
-		} else if err != nil {
-			tryCnt++
-			if tryCnt > MaxErrCnt {
-				log.Errorf(err, "RedisCli.Get error")
-				return ""
-			}
-		}
-		return value
+func GetCache(ctx context.Context, client *redis.Client, key string, value any) (bool, error) {
+	data, err := client.Get(ctx, key).Bytes()
+	if err == redis.Nil {
+		return false, nil
 	}
-}
-
-func RedisExists(key string) bool {
-	errCnt := 0
-	for {
-		ret := RedisCli.Exists(key)
-		if ret == nil || ret.Err() != nil {
-			errCnt++
-		} else {
-			return ret.Val()
-		}
-		if errCnt > MaxErrCnt {
-			log.Error("RedisCli.Exists error", nil)
-			break
-		}
+	if err != nil {
+		return false, err
 	}
-	return false
+	return true, json.Unmarshal(data, value)
 }

@@ -1,13 +1,14 @@
 package errno
 
+import "net/http"
+
 var (
-	OK                  = &Errno{Code: 0, Msg: "ok"}
-	InternalServerError = &Errno{Code: 1, Msg: "internal server error"}
-	ErrParam            = &Errno{Code: 2, Msg: "request param error"}
-	ErrTokenInvalid     = &Errno{Code: 3, Msg: "the token was invalid"}
-	ErrAccount          = &Errno{Code: 4, Msg: "account or password error"}
-	ErrPwdHasHan        = &Errno{Code: 5, Msg: "pwd has han"}
-	ErrNewPwdLen        = &Errno{Code: 6, Msg: "the len of new pass should >= 8"}
-	ErrDataExist        = &Errno{Code: 7, Msg: "data existed"}
-	ErrDataNotExist     = &Errno{Code: 8, Msg: "data not exist"}
+	OK                  = &Errno{HTTPStatus: http.StatusOK, Code: 0, Msg: "ok"}
+	InternalServerError = &Errno{HTTPStatus: http.StatusInternalServerError, Code: 1, Msg: "internal server error"}
+	ErrParam            = &Errno{HTTPStatus: http.StatusBadRequest, Code: 2, Msg: "request param error"}
+	ErrTokenInvalid     = &Errno{HTTPStatus: http.StatusUnauthorized, Code: 3, Msg: "the token is invalid"}
+	ErrAccount          = &Errno{HTTPStatus: http.StatusUnauthorized, Code: 4, Msg: "account or password error"}
+	ErrPassword         = &Errno{HTTPStatus: http.StatusBadRequest, Code: 5, Msg: "new password must contain at least 8 characters"}
+	ErrDataExist        = &Errno{HTTPStatus: http.StatusConflict, Code: 7, Msg: "data already exists"}
+	ErrDataNotExist     = &Errno{HTTPStatus: http.StatusNotFound, Code: 8, Msg: "data does not exist"}
 )

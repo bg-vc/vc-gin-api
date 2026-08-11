@@ -1,46 +1,45 @@
 package dao
 
 import (
-	"fmt"
+	"context"
+	"database/sql"
+
+	"github.com/bg-vc/vc-gin-api/model"
 	"github.com/jmoiron/sqlx"
-	"vc-gin-api/model"
-	"vc-gin-api/pkg"
-	"vc-gin-api/pkg/log"
 )
 
-type AccountDao struct {
+type AccountDAO struct {
 	db *sqlx.DB
 }
 
-func NewAccountDao() *AccountDao {
-	return &AccountDao{pkg.DB}
+func NewAccountDAO(db *sqlx.DB) *AccountDAO {
+	return &AccountDAO{db: db}
 }
 
-func (dao *AccountDao) GetAccountByName(name string) (*model.Account, error) {
-	sql := fmt.Sprintf(`select id, name, salt, pwd_crypt, status, is_admin `)
-	sql += fmt.Sprintf(`from account `)
-	sql += fmt.Sprintf(`where name=? `)
-	log.Infof("GetAccountByName sql:%v", sql)
-
-	rows, err := dao.db.Queryx(sql, name)
-	if err != nil {
-		log.Errorf(err, "GetAccountByName error:%v", sql)
+func (dao *AccountDAO) GetByName(ctx context.Context, name string) (*model.Account, error) {
+	const query = `SELECT id, name, password_hash, status, is_admin FROM account WHERE name = ?`
+	account := &model.Account{}
+	if err := dao.db.GetContext(ctx, account, query, name); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
-	defer rows.Close()
-	item := &model.Account{}
-	for rows.Next() {
-		rows.StructScan(item)
-	}
-
-	return item, nil
+	return account, nil
 }
 
-func (dao *AccountDao) UpdateAccountPwd(name, salt, pwdCrypt string) error {
-	sql := fmt.Sprintf(`update account set salt=?, pwd_crypt=? where name=? `)
-	if _, err := dao.db.Exec(sql, salt, pwdCrypt, name); err != nil {
-		log.Errorf(err, "UpdateAccountPwd error")
+func (dao *AccountDAO) UpdatePassword(ctx context.Context, name, passwordHash string) error {
+	const query = `UPDATE account SET password_hash = ? WHERE name = ?`
+	result, err := dao.db.ExecContext(ctx, query, passwordHash, name)
+	if err != nil {
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

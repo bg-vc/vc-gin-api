@@ -1,87 +1,60 @@
 package dao
 
 import (
-	"fmt"
+	"context"
+	"database/sql"
+
+	"github.com/bg-vc/vc-gin-api/model"
 	"github.com/jmoiron/sqlx"
-	"vc-gin-api/model"
-	"vc-gin-api/pkg"
-	"vc-gin-api/pkg/log"
 )
 
-type UserDao struct {
+type UserDAO struct {
 	db *sqlx.DB
 }
 
-func NewUserDao() *UserDao {
-	return &UserDao{pkg.DB}
+func NewUserDAO(db *sqlx.DB) *UserDAO {
+	return &UserDAO{db: db}
 }
 
-func (dao *UserDao) GetUsers(req *model.UserReq) ([]*model.User, int64, error) {
-	totalSql := fmt.Sprintf(`select count(1) as total from user `)
-	querySql := fmt.Sprintf(`select id, name, age, address from user `)
+func (dao *UserDAO) List(ctx context.Context, query model.UserQuery) ([]model.User, int64, error) {
+	const filter = ` WHERE (? = '' OR name = ?) AND (? = '' OR address LIKE CONCAT('%', ?, '%'))`
+	args := []any{query.Name, query.Name, query.Address, query.Address}
 
-	filterSql := fmt.Sprintf(`where 1=1 `)
-	if req.Name != "" {
-		filterSql += fmt.Sprintf(`and name='%v' `, req.Name)
-	}
-	if req.Address != "" {
-		filterSql += fmt.Sprintf(`and address like '%v%v%v' `, "%", req.Address, "%")
-	}
-
-	sortSql := fmt.Sprintf(`order by id asc `)
-	limitSql := fmt.Sprintf(`limit %v, %v `, req.Start, req.Limit)
-
-	totalSql += filterSql
-	querySql += filterSql + sortSql + limitSql
-
-	log.Infof("GetUsers totalSql:%v", totalSql)
-	row1, err := dao.db.Queryx(totalSql)
-	if err != nil {
-		log.Errorf(err, "GetUsers error:%v", totalSql)
+	var total int64
+	if err := dao.db.GetContext(ctx, &total, `SELECT COUNT(*) FROM user`+filter, args...); err != nil {
 		return nil, 0, err
 	}
-	defer row1.Close()
-	total := int64(0)
-	if row1.Next() {
-		row1.Scan(&total)
-	}
 
-	log.Infof("GetUsers querySql:%v", querySql)
-	row2, err := dao.db.Queryx(querySql)
-	if err != nil {
-		log.Errorf(err, "GetUsers error:%v", querySql)
+	users := make([]model.User, 0)
+	listArgs := append(args, query.Limit, query.Start)
+	const columns = `SELECT id, name, age, address FROM user`
+	if err := dao.db.SelectContext(ctx, &users, columns+filter+` ORDER BY id ASC LIMIT ? OFFSET ?`, listArgs...); err != nil {
 		return nil, 0, err
 	}
-	defer row2.Close()
-	list := make([]*model.User, 0)
-	for row2.Next() {
-		item := &model.User{}
-		row2.StructScan(item)
-		list = append(list, item)
-	}
-
-	return list, total, nil
+	return users, total, nil
 }
 
-func (dao *UserDao) AddUser(form *model.UserForm) error {
-	sql := fmt.Sprintf(`insert into user(name, age, address) `)
-	sql += fmt.Sprintf(`values(?, ?, ?) `)
+func (dao *UserDAO) Create(ctx context.Context, form model.UserCreateForm) (int64, error) {
+	const query = `INSERT INTO user(name, age, address) VALUES (?, ?, ?)`
+	result, err := dao.db.ExecContext(ctx, query, form.Name, form.Age, form.Address)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
 
-	log.Infof("AddUser sql:%v", sql)
-	if _, err := dao.db.Exec(sql, form.Name, form.Age, form.Address); err != nil {
-		log.Errorf(err, "AddUser error:%v", sql)
+func (dao *UserDAO) Update(ctx context.Context, form model.UserUpdateForm) error {
+	const query = `UPDATE user SET name = ?, age = ?, address = ? WHERE id = ?`
+	result, err := dao.db.ExecContext(ctx, query, form.Name, form.Age, form.Address, form.ID)
+	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func (dao *UserDao) UpdateUser(form *model.UserForm) error {
-	sql := fmt.Sprintf(`update user set name=?, age=?, address=? `)
-	sql += fmt.Sprintf(`where name=? `)
-
-	log.Infof("UpdateUser sql:%v", sql)
-	if _, err := dao.db.Exec(sql, form.Name, form.Age, form.Address, form.Name); err != nil {
-		log.Errorf(err, "UpdateUser error:%v", sql)
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

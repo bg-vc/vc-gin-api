@@ -1,0 +1,4 @@
+interface:
+  display_name: "Simple Go API"
+  short_description: "Learn and extend this small Gin API clearly"
+  default_prompt: "Use $simple-go-api to explain or extend this Gin API without overengineering it."

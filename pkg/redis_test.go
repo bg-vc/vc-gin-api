@@ -1,41 +1,37 @@
 package pkg
 
 import (
-	"fmt"
+	"context"
 	"testing"
+	"time"
+
+	"github.com/alicebob/miniredis/v2"
 )
 
-func TestSetRedisVal(t *testing.T) {
-	Init("../conf/config.yaml")
-	key := fmt.Sprintf(`vc-gin-api:test:user:%v`, 1)
-	user := &User{
-		Name:    "vince",
-		Age:     24,
-		Address: "beijing",
+func TestRedisDisabled(t *testing.T) {
+	client, err := OpenRedis(context.Background(), RedisConfig{Enabled: false})
+	if err != nil || client != nil {
+		t.Fatalf("disabled Redis should return nil, nil; got %v, %v", client, err)
 	}
-	if err := SetRedisVal(key, user, 0); err != nil {
-		t.Errorf("pkg.SetRedisVal error, key:%v, err:%v", key, err)
-		return
+}
+
+func TestRedisCacheExample(t *testing.T) {
+	server := miniredis.RunT(t)
+	client, err := OpenRedis(context.Background(), RedisConfig{Enabled: true, Address: server.Addr()})
+	if err != nil {
+		t.Fatal(err)
 	}
-	t.Log("done success")
-}
+	defer client.Close()
 
-type User struct {
-	Name    string `json:"name"`
-	Age     int    `json:"age"`
-	Address string `json:"address"`
-}
-
-func TestGetRedisVal(t *testing.T) {
-	Init("../conf/config.yaml")
-	key := fmt.Sprintf(`vc-gin-api:test:user:%v`, 1)
-	result := GetRedisVal(key)
-	t.Logf("result:%v\n", result)
-}
-
-func TestRedisExists(t *testing.T) {
-	Init("../conf/config.yaml")
-	key := fmt.Sprintf(`vc-gin-api:test:user:%v`, 1)
-	result := RedisExists(key)
-	t.Logf("result:%v\n", result)
+	type value struct {
+		Name string `json:"name"`
+	}
+	if err := SetCache(context.Background(), client, "example", value{Name: "SIMPLE"}, time.Minute); err != nil {
+		t.Fatal(err)
+	}
+	var loaded value
+	found, err := GetCache(context.Background(), client, "example", &loaded)
+	if err != nil || !found || loaded.Name != "SIMPLE" {
+		t.Fatalf("unexpected cache result: found=%v value=%+v err=%v", found, loaded, err)
+	}
 }

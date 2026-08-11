@@ -7,19 +7,26 @@ type User struct {
 	Address string `db:"address" json:"address"`
 }
 
-type UserReq struct {
+type UserQuery struct {
 	Page
 	Name    string `form:"name"`
 	Address string `form:"address"`
 }
 
-type UserResp struct {
-	Total int64   `json:"total"`
-	Rows  []*User `json:"rows"`
+type UserResponse struct {
+	Total int64  `json:"total"`
+	Rows  []User `json:"rows"`
 }
 
-type UserForm struct {
-	Name    string `form:"name" binding:"required"`
-	Age     int64  `form:"age" binding:"required"`
-	Address string `form:"address" binding:"required"`
+type UserCreateForm struct {
+	Name    string `json:"name" binding:"required"`
+	Age     int    `json:"age" binding:"required,min=1,max=150"`
+	Address string `json:"address" binding:"required"`
+}
+
+type UserUpdateForm struct {
+	ID      int64  `json:"id" binding:"required,min=1"`
+	Name    string `json:"name" binding:"required"`
+	Age     int    `json:"age" binding:"required,min=1,max=150"`
+	Address string `json:"address" binding:"required"`
 }
