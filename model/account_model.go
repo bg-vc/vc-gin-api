@@ -1,26 +1,28 @@
 package model
 
+import "time"
+
 type Account struct {
-	ID       uint64 `db:"id" json:"id"`
-	Name     string `db:"name" json:"name"`
-	Salt     string `db:"salt" json:"salt"`
-	PwdCrypt string `db:"pwd_crypt" json:"pwdCrypt"`
-	Status   int    `db:"status" json:"status"`
-	IsAdmin  int    `db:"is_admin" json:"isAdmin"`
+	ID           uint64 `db:"id"`
+	Name         string `db:"name"`
+	PasswordHash string `db:"password_hash"`
+	Status       int    `db:"status"`
+	IsAdmin      int    `db:"is_admin"`
 }
 
 type LoginForm struct {
-	Name     string `form:"name" binding:"required"`
-	Password string `form:"password" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
-type AccountResp struct {
-	Name  string `json:"name"`
-	Token string `json:"token"`
+type AccountResponse struct {
+	Name      string    `json:"name"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expiresAt"`
 }
 
-type UpdatePwdForm struct {
-	Name   string `form:"name" binding:"required"`
-	OldPwd string `form:"oldPwd" binding:"required"`
-	NewPwd string `form:"newPwd" binding:"required"`
+type UpdatePasswordForm struct {
+	Name        string `json:"name" binding:"required"`
+	OldPassword string `json:"oldPwd" binding:"required"`
+	NewPassword string `json:"newPwd" binding:"required,min=8"`
 }

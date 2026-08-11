@@ -1,64 +1,90 @@
 package pkg
 
 import (
-	"github.com/fsnotify/fsnotify"
-	"github.com/jmoiron/sqlx"
-	"github.com/spf13/viper"
-	"gopkg.in/redis.v5"
-	"vc-gin-api/pkg/log"
-)
+	"errors"
+	"fmt"
+	"os"
+	"strconv"
+	"time"
 
-var (
-	Cfg      *Config
-	DB       *sqlx.DB
-	RedisCli *redis.Client
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Logger *LoggerConfig
-	DB     *DBConfig
-	Redis  *RedisConfig
+	Address   string
+	RunMode   string
+	JWTSecret string
+	JWTExpiry time.Duration
+	Database  DBConfig
+	Redis     RedisConfig
 }
 
-func Init(cfgName string) {
-	setConfig(cfgName)
-	Cfg = loadConfig()
-	initConfig(Cfg)
-	watchConfig()
-}
-
-func setConfig(cfgName string) {
-	if cfgName != "" {
-		viper.SetConfigFile(cfgName)
-	} else {
-		viper.AddConfigPath("conf")
-		viper.SetConfigName("config")
+func LoadConfig() (Config, error) {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return Config{}, fmt.Errorf("load .env: %w", err)
 	}
 
-	if err := viper.ReadInConfig(); err != nil {
-		panic("viper.ReadInConfig error")
+	cfg := Config{
+		Address:   env("VC_HTTP_ADDRESS", ":8080"),
+		RunMode:   env("VC_GIN_MODE", "debug"),
+		JWTSecret: os.Getenv("VC_JWT_SECRET"),
+		Database: DBConfig{
+			Host:     env("VC_DB_HOST", "127.0.0.1"),
+			Port:     env("VC_DB_PORT", "3306"),
+			Name:     env("VC_DB_NAME", "demo"),
+			User:     env("VC_DB_USER", "vcgin"),
+			Password: os.Getenv("VC_DB_PASSWORD"),
+		},
+		Redis: RedisConfig{
+			Enabled:  envBool("VC_REDIS_ENABLED", false),
+			Address:  env("VC_REDIS_ADDRESS", "127.0.0.1:6379"),
+			Password: os.Getenv("VC_REDIS_PASSWORD"),
+			DB:       envInt("VC_REDIS_DB", 0),
+		},
 	}
-}
 
-func loadConfig() *Config {
-	cfg := &Config{
-		Logger: LoadLoggerConfig(viper.Sub("logger")),
-		DB:     LoadDbConfig(viper.Sub("db")),
-		Redis:  LoadRedisConfig(viper.Sub("redis")),
+	var err error
+	cfg.JWTExpiry, err = time.ParseDuration(env("VC_JWT_EXPIRY", "30m"))
+	if err != nil {
+		return Config{}, fmt.Errorf("parse VC_JWT_EXPIRY: %w", err)
+	}
+	if len(cfg.JWTSecret) < 32 {
+		return Config{}, fmt.Errorf("VC_JWT_SECRET must contain at least 32 characters")
+	}
+	if cfg.Database.Password == "" {
+		return Config{}, fmt.Errorf("VC_DB_PASSWORD is required")
 	}
 
-	return cfg
+	return cfg, nil
 }
 
-func initConfig(cfg *Config) {
-	cfg.Logger.InitLogger()
-	DB = cfg.DB.InitDB()
-	//RedisCli = cfg.Redis.InitRedis()
+func env(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
 
-func watchConfig() {
-	viper.WatchConfig()
-	viper.OnConfigChange(func(e fsnotify.Event) {
-		log.Infof("config file changed:%s", e.Name)
-	})
+func envBool(key string, fallback bool) bool {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func envInt(key string, fallback int) int {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }

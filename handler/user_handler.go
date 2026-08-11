@@ -1,68 +1,46 @@
 package handler
 
 import (
+	"github.com/bg-vc/vc-gin-api/model"
+	"github.com/bg-vc/vc-gin-api/pkg/errno"
+	"github.com/bg-vc/vc-gin-api/service"
 	"github.com/gin-gonic/gin"
-	"vc-gin-api/model"
-	"vc-gin-api/pkg/errno"
-	"vc-gin-api/pkg/log"
-	"vc-gin-api/service"
 )
 
-func QueryUsers(c *gin.Context) {
-	req := &model.UserReq{}
-	if err := c.ShouldBind(req); err != nil {
-		log.Errorf(err, "c.ShouldBind error")
+type UserHandler struct {
+	users *service.UserService
+}
+
+func NewUserHandler(users *service.UserService) *UserHandler {
+	return &UserHandler{users: users}
+}
+
+func (handler *UserHandler) List(c *gin.Context) {
+	var query model.UserQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
 		SendResponse(c, errno.ErrParam, nil)
 		return
 	}
-	if req.Start < 0 {
-		req.Start = 0
-	}
-	if req.Limit > 50 {
-		req.Limit = 50
-	}
-
-	service := service.NewUserService()
-
-	resp, err := service.QueryUsers(req)
-	if err != nil {
-		SendResponse(c, err, nil)
-		return
-	}
-
-	SendResponse(c, nil, resp)
+	response, err := handler.users.List(c.Request.Context(), query)
+	SendResponse(c, err, response)
 }
 
-func AddUser(c *gin.Context) {
-	form := &model.UserForm{}
-	if err := c.ShouldBindJSON(form); err != nil {
-		SendResponse(c, err, nil)
+func (handler *UserHandler) Create(c *gin.Context) {
+	var form model.UserCreateForm
+	if err := c.ShouldBindJSON(&form); err != nil {
+		SendResponse(c, errno.ErrParam, nil)
 		return
 	}
-
-	service := service.NewUserService()
-
-	if err := service.AddUser(form); err != nil {
-		SendResponse(c, err, nil)
-		return
-	}
-
-	SendResponse(c, nil, nil)
+	user, err := handler.users.Create(c.Request.Context(), form)
+	SendResponse(c, err, user)
 }
 
-func UpdateUser(c *gin.Context) {
-	form := &model.UserForm{}
-	if err := c.ShouldBindJSON(form); err != nil {
-		SendResponse(c, err, nil)
+func (handler *UserHandler) Update(c *gin.Context) {
+	var form model.UserUpdateForm
+	if err := c.ShouldBindJSON(&form); err != nil {
+		SendResponse(c, errno.ErrParam, nil)
 		return
 	}
-
-	service := service.NewUserService()
-
-	if err := service.UpdateUser(form); err != nil {
-		SendResponse(c, err, nil)
-		return
-	}
-
-	SendResponse(c, nil, nil)
+	err := handler.users.Update(c.Request.Context(), form)
+	SendResponse(c, err, nil)
 }

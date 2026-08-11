@@ -1,75 +1,72 @@
 package service
 
 import (
-	"vc-gin-api/dao"
-	"vc-gin-api/model"
-	"vc-gin-api/pkg"
-	"vc-gin-api/pkg/errno"
-	"vc-gin-api/pkg/log"
-	"vc-gin-api/util"
+	"context"
+	"database/sql"
+	"errors"
+
+	"github.com/bg-vc/vc-gin-api/dao"
+	"github.com/bg-vc/vc-gin-api/model"
+	"github.com/bg-vc/vc-gin-api/pkg"
+	"github.com/bg-vc/vc-gin-api/pkg/errno"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AccountService struct {
-	accountDao *dao.AccountDao
+	accounts *dao.AccountDAO
+	tokens   *pkg.TokenManager
 }
 
-func NewAccountService() *AccountService {
-	return &AccountService{dao.NewAccountDao()}
+func NewAccountService(accounts *dao.AccountDAO, tokens *pkg.TokenManager) *AccountService {
+	return &AccountService{accounts: accounts, tokens: tokens}
 }
 
-func (service *AccountService) LoginAccount(form *model.LoginForm) (*model.AccountResp, *errno.Errno) {
-	account, err := service.accountDao.GetAccountByName(form.Name)
+func (service *AccountService) Login(ctx context.Context, form model.LoginForm) (*model.AccountResponse, error) {
+	account, err := service.accounts.GetByName(ctx, form.Name)
 	if err != nil {
-		return nil, errno.InternalServerError
+		return nil, err
 	}
-	if account.Name == "" {
+	if account == nil || account.Status != 1 {
 		return nil, errno.ErrAccount
 	}
-	salt := account.Salt
-	pwdCrypt := util.MD5(salt + form.Password)
-	if pwdCrypt != account.PwdCrypt {
+	if err := bcrypt.CompareHashAndPassword([]byte(account.PasswordHash), []byte(form.Password)); err != nil {
 		return nil, errno.ErrAccount
 	}
 
-	token, err := signApiToken(account.ID, account.Name)
+	token, expiresAt, err := service.tokens.Sign(account.ID, account.Name)
 	if err != nil {
-		return nil, errno.InternalServerError
+		return nil, err
 	}
-	resp := &model.AccountResp{
-		Name:  account.Name,
-		Token: token,
-	}
-
-	return resp, nil
+	return &model.AccountResponse{Name: account.Name, Token: token, ExpiresAt: expiresAt}, nil
 }
 
-func (service *AccountService) UpdateAccountPwd(form *model.UpdatePwdForm) *errno.Errno {
-	account, err := service.accountDao.GetAccountByName(form.Name)
+func (service *AccountService) UpdatePassword(ctx context.Context, authenticatedName string, form model.UpdatePasswordForm) error {
+	if form.Name != authenticatedName {
+		return errno.ErrTokenInvalid
+	}
+	if len(form.NewPassword) < 8 {
+		return errno.ErrPassword
+	}
+
+	account, err := service.accounts.GetByName(ctx, authenticatedName)
 	if err != nil {
-		return errno.InternalServerError
+		return err
 	}
-	if account.Name == "" {
+	if account == nil {
 		return errno.ErrAccount
 	}
-	oldSalt := account.Salt
-	oldPwdCrypt := util.MD5(oldSalt + form.OldPwd)
-	if account.PwdCrypt != oldPwdCrypt {
+	if err := bcrypt.CompareHashAndPassword([]byte(account.PasswordHash), []byte(form.OldPassword)); err != nil {
 		return errno.ErrAccount
 	}
-	newSalt := util.GetRandomString(8)
-	newPwdCrypt := util.MD5(newSalt + form.NewPwd)
-	if err := service.accountDao.UpdateAccountPwd(form.Name, newSalt, newPwdCrypt); err != nil {
-		return errno.InternalServerError
+	hash, err := bcrypt.GenerateFromPassword([]byte(form.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	if err := service.accounts.UpdatePassword(ctx, authenticatedName, string(hash)); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errno.ErrDataNotExist
+		}
+		return err
 	}
 	return nil
-}
-
-func signApiToken(id uint64, username string) (string, error) {
-	token, err := pkg.Sign(pkg.Context{ID: id, Username: username})
-	if err != nil {
-		log.Errorf(err, "signApiToken error")
-		return "", nil
-	}
-
-	return token, nil
 }

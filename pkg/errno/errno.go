@@ -1,37 +1,24 @@
 package errno
 
-import "fmt"
+import "errors"
 
 type Errno struct {
-	Code int
-	Msg  string
+	HTTPStatus int
+	Code       int
+	Msg        string
 }
 
-func (err Errno) Error() string {
+func (err *Errno) Error() string {
 	return err.Msg
 }
 
-type Err struct {
-	Code int
-	Msg  string
-	Err  error
-}
-
-func (err *Err) Error() string {
-	return fmt.Sprintf("Err - code: %d, msg: %s, error: %s", err.Code, err.Msg, err.Err)
-}
-
-func DecodeErr(err error) (int, string) {
+func Decode(err error) (int, int, string) {
 	if err == nil {
-		return OK.Code, OK.Msg
+		return OK.HTTPStatus, OK.Code, OK.Msg
 	}
-
-	switch typed := err.(type) {
-	case *Err:
-		return typed.Code, typed.Msg
-	case *Errno:
-		return typed.Code, typed.Msg
-	default:
+	var known *Errno
+	if errors.As(err, &known) {
+		return known.HTTPStatus, known.Code, known.Msg
 	}
-	return InternalServerError.Code, err.Error()
+	return InternalServerError.HTTPStatus, InternalServerError.Code, InternalServerError.Msg
 }

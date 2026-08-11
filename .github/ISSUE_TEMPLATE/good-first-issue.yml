@@ -1,0 +1,29 @@
+name: SIMPLE first contribution
+description: Suggest a small change that follows the existing request path
+title: "[good first issue] "
+labels: ["good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping keep Go backend learning simple.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Learning goal
+      description: What should a learner understand after this change?
+    validations:
+      required: true
+  - type: textarea
+    id: request-path
+    attributes:
+      label: Request path
+      description: Which Router, Handler, Service, DAO, and model files are involved?
+    validations:
+      required: true
+  - type: checkboxes
+    id: simplicity
+    attributes:
+      label: SIMPLE check
+      options:
+        - label: This change does not require a new framework, generator, or speculative abstraction.
+          required: true

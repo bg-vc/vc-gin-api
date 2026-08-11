@@ -1,0 +1,27 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${VC_DB_NAME}
+      MYSQL_USER: ${VC_DB_USER}
+      MYSQL_PASSWORD: ${VC_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${VC_DB_ROOT_PASSWORD}
+    ports:
+      - "${VC_DB_PORT}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./extra/schema/demo.sql:/docker-entrypoint-initdb.d/01-demo.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${VC_DB_ROOT_PASSWORD}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    profiles: ["redis"]
+    ports:
+      - "${VC_REDIS_PORT}:6379"
+
+volumes:
+  mysql-data:

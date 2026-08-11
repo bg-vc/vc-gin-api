@@ -3,69 +3,73 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
+	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
-var (
-	ErrMissingHeader = errors.New("the length of the authorization header is zero")
-)
+var ErrInvalidToken = errors.New("invalid token")
 
-type Context struct {
-	ID       uint64
-	Username string
+type TokenManager struct {
+	secret []byte
+	ttl    time.Duration
+	now    func() time.Time
 }
 
-func ParseRequest(c *gin.Context) (*Context, error) {
-	header := c.Request.Header.Get("Authorization")
-	if len(header) == 0 {
-		return &Context{}, ErrMissingHeader
+type TokenContext struct {
+	AccountID uint64
+	Username  string
+	ExpiresAt time.Time
+}
+
+type tokenClaims struct {
+	AccountID uint64 `json:"accountId"`
+	Username  string `json:"username"`
+	jwt.RegisteredClaims
+}
+
+func NewTokenManager(secret string, ttl time.Duration) *TokenManager {
+	return &TokenManager{secret: []byte(secret), ttl: ttl, now: time.Now}
+}
+
+func (manager *TokenManager) Sign(accountID uint64, username string) (string, time.Time, error) {
+	now := manager.now().Truncate(time.Second)
+	expiresAt := now.Add(manager.ttl).Truncate(time.Second)
+	claims := tokenClaims{
+		AccountID: accountID,
+		Username:  username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   fmt.Sprint(accountID),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString(manager.secret)
+	return signed, expiresAt, err
+}
+
+func (manager *TokenManager) ParseAuthorization(header string) (TokenContext, error) {
+	prefix, tokenString, found := strings.Cut(strings.TrimSpace(header), " ")
+	if !found || !strings.EqualFold(prefix, "Bearer") || tokenString == "" {
+		return TokenContext{}, ErrInvalidToken
 	}
 
-	secret := viper.GetString("jwt_secret")
-
-	var t string
-	fmt.Sscanf(header, "Bearer %s", &t)
-	return Parse(t, secret)
-}
-
-func Parse(tokenString string, secret string) (*Context, error) {
-	ctx := &Context{}
-
-	token, err := jwt.Parse(tokenString, secretFunc(secret))
-	if err != nil {
-		return ctx, err
-	} else if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		ctx.ID = uint64(claims["id"].(float64))
-		ctx.Username = claims["username"].(string)
-		return ctx, nil
-	} else {
-		return ctx, err
+	claims := &tokenClaims{}
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		claims,
+		func(token *jwt.Token) (any, error) { return manager.secret, nil },
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+	)
+	if err != nil || !token.Valid || claims.ExpiresAt == nil || claims.AccountID == 0 || claims.Username == "" {
+		return TokenContext{}, ErrInvalidToken
 	}
-}
-
-func Sign(c Context) (tokenString string, err error) {
-	secret := viper.GetString("jwt_secret")
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":       c.ID,
-		"username": c.Username,
-		"exp":      time.Now().Unix() + 60*30,
-		"nbf":      time.Now().Unix(),
-		"iat":      time.Now().Unix(),
-	})
-	tokenString, err = token.SignedString([]byte(secret))
-	return
-}
-
-func secretFunc(secret string) jwt.Keyfunc {
-	return func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrSignatureInvalid
-		}
-
-		return []byte(secret), nil
-	}
+	return TokenContext{
+		AccountID: claims.AccountID,
+		Username:  claims.Username,
+		ExpiresAt: claims.ExpiresAt.Time,
+	}, nil
 }
