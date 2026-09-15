@@ -40,7 +40,7 @@ func (service *UserService) Create(ctx context.Context, form model.UserCreateFor
 	if err != nil {
 		return model.User{}, err
 	}
-	return model.User{ID: id, Name: form.Name, Age: form.Age, Address: form.Address}, nil
+	return model.User{ID: id, Name: form.Name, Age: form.Age, Address: form.Address, Email: form.Email}, nil
 }
 
 func (service *UserService) Update(ctx context.Context, form model.UserUpdateForm) error {

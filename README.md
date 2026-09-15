@@ -72,9 +72,10 @@ TOKEN='paste-token-here'
 
 ```bash
 curl 'http://127.0.0.1:8080/api/user/common/queryAll?start=0&limit=20'
+curl 'http://127.0.0.1:8080/api/user/common/queryAll?start=0&limit=20&email=alice%40example.com'
 ```
 
-Optional filters are `name` and `address`.
+Optional filters are `name`, `address`, and `email`.
 
 ### 3. Add a user
 
@@ -82,7 +83,12 @@ Optional filters are `name` and `address`.
 curl -X POST http://127.0.0.1:8080/api/user/auth/add \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"name":"Alice","age":28,"address":"Shanghai"}'
+  -d '{"name":"Alice","age":28,"address":"Shanghai","email":"alice@example.com"}'
+# email is optional
+curl -X POST http://127.0.0.1:8080/api/user/auth/add \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Bob","age":30,"address":"Beijing"}'
 ```
 
 ### 4. Update that user
@@ -93,7 +99,7 @@ Use the returned user `id`:
 curl -X POST http://127.0.0.1:8080/api/user/auth/update \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"id":2,"name":"Alice","age":29,"address":"Beijing"}'
+  -d '{"id":2,"name":"Alice","age":29,"address":"Beijing","email":"alice@example.com"}'
 ```
 
 ### 5. Change the account password
