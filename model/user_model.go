@@ -5,6 +5,7 @@ type User struct {
 	Name    string `db:"name" json:"name"`
 	Age     int    `db:"age" json:"age"`
 	Address string `db:"address" json:"address"`
+	Email   string `db:"email" json:"email"`
 }
 
 type UserQuery struct {
@@ -22,6 +23,7 @@ type UserCreateForm struct {
 	Name    string `json:"name" binding:"required"`
 	Age     int    `json:"age" binding:"required,min=1,max=150"`
 	Address string `json:"address" binding:"required"`
+	Email   string `json:"email" binding:"omitempty,email"`
 }
 
 type UserUpdateForm struct {
@@ -29,4 +31,5 @@ type UserUpdateForm struct {
 	Name    string `json:"name" binding:"required"`
 	Age     int    `json:"age" binding:"required,min=1,max=150"`
 	Address string `json:"address" binding:"required"`
+	Email   string `json:"email" binding:"omitempty,email"`
 }
